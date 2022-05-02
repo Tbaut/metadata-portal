@@ -16,6 +16,8 @@ import {
 import "mottled-library/css/NetworkSlider.css";
 import "mottled-library/css/Card.css";
 import GitHub from "../assets/gh.png";
+import NextMetadata from "./NextMetadata";
+import Extension from "./Extension";
 // import Extension from "./Extension";
 
 export default function App() {
@@ -120,10 +122,11 @@ export default function App() {
             </div>
           </div>
           <div className="lg:flex grid justify-center pt-8">
-            <QrCode path={metadataQr.path} />
+            <QrCode {...metadataQr} />
             <div className="text-black p-5 w-72">
               <Specs chainSpecs={{ ...chain }} color={currentNetwork?.color} />
               <AddToSigner {...specsQr} />
+              <NextMetadata {...chain} />
               {/*<Extension {...chain} />*/}
             </div>
           </div>

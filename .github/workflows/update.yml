@@ -2,16 +2,15 @@ name: Check updates
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */2 * * *'
 
 env:
-  BRANCH_PREFIX: sign-me
+  BRANCH_PREFIX: automated
   NOTIFY_MATRIX: true
 
 jobs:
   update:
     runs-on: ubuntu-latest
-
     steps:
       - name: 🛎 Checkout
         uses: actions/checkout@v3
@@ -40,23 +39,29 @@ jobs:
           command: build
           args: --release
 
-      - name: ⚙ Run QR updater
+      - name: ⚙ Update QRs from RPC nodes
         uses: actions-rs/cargo@v1
         with:
           command: run
-          args: --release -- update
+          args: --release -- update --source node
 
-      - name: ⚙ Run cleaner
+      - name: ⚙ Update QRs from GitHub releases
         uses: actions-rs/cargo@v1
         with:
           command: run
-          args: --release -- clean
+          args: --release -- update --source github
+
+      - name: ⚙ Run collector
+        uses: actions-rs/cargo@v1
+        with:
+          command: run
+          args: --release -- collect
 
       - name: 📌 Commit changes if PR exists
         if: ${{ steps.checkout-pr.outputs.switched == 'true' }}
         uses: ./.github/workflows/commit-changes
         with:
-          message: 'add unsigned QR code'
+          message: 'metadata update'
 
       - name: New PR branch
         if: ${{ steps.checkout-pr.outputs.switched == 'false' }}
@@ -74,12 +79,12 @@ jobs:
           branch: ${{ steps.new-branch.outputs.name }}
           delete-branch: true
           base: master
-          title: '[Automated] Sign new QR codes'
+          title: '[Automated] New metadata is available'
           body: |
-            - [ ] Clone the repo and checkout this branch
-            - [ ] Run `make signer` to sign files
-            - [ ] Run `make cleaner` to remove old QRs
-            - [ ] Commit changes and push
+            In case there are new metadata QRs, run:
+            - [ ] `make signer` to sign files
+            - [ ] `make cleaner` to remove old QRs
+            - [ ] `make collector` to generate new data file for frontend
           draft: true
 
       - name: Notify Matrix channel
